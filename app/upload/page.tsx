@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useDocumentContext } from '@/lib/context/DocumentContext';
+import { useAuth } from '@/lib/context/AuthContext';
 import { Dropzone } from '@/components/upload/Dropzone';
 import { ProcessingTracker } from '@/components/upload/ProcessingTracker';
 import { LegalDocument } from '@/lib/types/document';
+import SpotlightCard from '@/components/ui/SpotlightCard';
 import {
   Upload,
   ArrowLeft,
@@ -16,17 +18,55 @@ import {
   MessageSquare,
   RefreshCw,
   Sparkles,
+  Lock,
+  LogIn,
+  Zap,
 } from 'lucide-react';
 
 export default function UploadPage() {
   const router = useRouter();
   const { uploadDocument, retryProcessing } = useDocumentContext();
+  const { user, signInAsDemo } = useAuth();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSimulatedFailure, setIsSimulatedFailure] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedDoc, setProcessedDoc] = useState<LegalDocument | null>(null);
   const [failureError, setFailureError] = useState<string | null>(null);
+
+  if (!user) {
+    return (
+      <div className="min-h-[65vh] flex items-center justify-center p-4">
+        <SpotlightCard className="max-w-md w-full p-8 text-center bg-slate-900/90 border border-slate-800 rounded-3xl space-y-6 shadow-2xl backdrop-blur-xl">
+          <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center mx-auto">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-extrabold text-slate-100">Sign In to Upload Documents</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Please sign in or use quick bypass mode to upload and analyze your contracts with AI.
+            </p>
+          </div>
+          <div className="space-y-3 pt-2">
+            <Link
+              href="/login?redirect=/upload"
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 transition-all duration-200 text-xs shadow-lg shadow-blue-600/25 hover:scale-105"
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In to Upload
+            </Link>
+            <button
+              onClick={() => signInAsDemo('Demo User', 'demo@legaljargon.com')}
+              className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center justify-center gap-2 transition-all duration-200 text-xs border border-slate-700 hover:scale-105"
+            >
+              <Zap className="w-4 h-4 text-cyan-400" />
+              Quick Bypass Login
+            </button>
+          </div>
+        </SpotlightCard>
+      </div>
+    );
+  }
 
   const handleFileSelect = async (file: File, simulateFailure: boolean) => {
     setSelectedFile(file);

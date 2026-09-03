@@ -50,25 +50,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const getSuggestedQuestions = (lang: SupportedLanguage) => {
     if (lang === 'pa') {
       return [
-        'ਰੱਦ ਕਰਨ ਲਈ ਨੋਟਿਸ ਪੀਰੀਅਡ ਕਿੰਨਾ ਹੈ?',
-        'ਉਮੀਦਵਾਰ ਕੌਣ ਹੈ?',
-        'ਇਸ ਦਸਤਾਵੇਜ਼ ਵਿੱਚ ਮੁੱਖ ਖਤਰੇ ਕਿਹੜੇ ਹਨ?',
-        'ਮੈਨੂੰ ਕਿਹੜੀਆਂ ਮਿਤੀਆਂ ਯਾਦ ਰੱਖਣੀਆਂ ਚਾਹੀਦੀਆਂ ਹਨ?',
+        'ਜੇਕਰ ਮੈਂ ਇਸ ਦਾ ਜਵਾਬ ਨਾ ਦਿੱਤਾ ਤਾਂ ਮੇਰੇ \'ਤੇ ਕੀ ਕਾਰਵਾਈ ਹੋ ਸਕਦੀ ਹੈ?',
+        'ਮੈਨੂੰ ਸਭ ਤੋਂ ਪਹਿਲਾਂ ਕੀ ਕਦਮ ਚੁੱਕਣਾ ਚਾਹੀਦਾ ਹੈ?',
+        'ਇਹ ਕਿਹੜੇ ਵਿਭਾਗ ਵਲੋਂ ਆਇਆ ਹੈ ਅਤੇ ਆਖਰੀ ਤਾਰੀਖ ਕੀ ਹੈ?',
+        'ਕੀ ਇਸ ਵਿੱਚ ਕੋਈ ਜ਼ੁਰਮਾਨਾ ਜਾਂ ਪੈਨਲਟੀ ਲਗਾਈ ਗਈ ਹੈ?',
       ];
     }
     if (lang === 'hi') {
       return [
-        'रद्द करने के लिए नोटिस अवधि क्या है?',
-        'उम्मीदवार कौन है?',
-        'इस दस्तावेज़ में मुख्य जोखिम क्या हैं?',
-        'मुझे कौन सी तिथियां याद रखनी चाहिए?',
+        'यदि मैं इसका उत्तर नहीं देता तो मेरे खिलाफ क्या कार्रवाई हो सकती है?',
+        'मुझे सबसे पहले क्या कदम उठाना चाहिए?',
+        'यह किस विभाग से आया है और इसकी अंतिम तिथि क्या है?',
+        'क्या इसमें कोई जुर्माना या पेनल्टी लगाई गई है?',
       ];
     }
     return [
-      'What is this document?',
-      'Who is the candidate?',
-      'What is the notice period required to cancel or terminate?',
-      'What key dates or deadlines do I need to keep track of?',
+      'What action can be taken against me if I don\'t respond to this notice?',
+      'What exact step should I take first?',
+      'Which department or authority issued this and when is the deadline?',
+      'Are there any financial penalties, fines, or legal risks involved?',
     ];
   };
 
@@ -104,23 +104,23 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[750px] bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-      {/* Header */}
+    <div className="flex flex-col h-[780px] bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+      {/* Header Banner - Virtual AI Legal Advocate */}
       <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
-            <Bot className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+            <Sparkles className="w-5 h-5 text-amber-300" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-              Grounded AI Assistant
-              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
-                Extracted Text Grounded
+            <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2">
+              {labels.advocateTitle}
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] bg-amber-500/10 text-amber-300 font-semibold border border-amber-500/20">
+                Legal Counselor Active
               </span>
             </h3>
             <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-              <FileText className="w-3.5 h-3.5" />
-              <span>Analyzing: <strong>{cleanFileName}</strong></span>
+              <FileText className="w-3.5 h-3.5 text-blue-400" />
+              <span>Analyzing: <strong className="text-slate-200">{cleanFileName}</strong></span>
             </p>
           </div>
         </div>

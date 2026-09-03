@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useDocumentContext } from '@/lib/context/DocumentContext';
+import { useAuth } from '@/lib/context/AuthContext';
 import { StatsOverview } from '@/components/dashboard/StatsOverview';
 import { DocumentCard } from '@/components/dashboard/DocumentCard';
 import { EmptyState } from '@/components/dashboard/EmptyState';
@@ -14,12 +15,15 @@ import {
   Sparkles,
   RefreshCw,
   Plus,
-  SlidersHorizontal,
+  Lock,
+  LogIn,
+  Zap,
 } from 'lucide-react';
+import SpotlightCard from '@/components/ui/SpotlightCard';
 
 export default function DashboardPage() {
-  const { documents, loading, deleteDocument, retryProcessing, refreshDocuments, currentUser } =
-    useDocumentContext();
+  const { documents, loading, deleteDocument, retryProcessing, refreshDocuments } = useDocumentContext();
+  const { user, signInAsDemo } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'processed' | 'processing' | 'failed'>('all');
 
@@ -33,6 +37,40 @@ export default function DashboardPage() {
     return matchesSearch && matchesStatus;
   });
 
+  if (!user) {
+    return (
+      <div className="min-h-[65vh] flex items-center justify-center p-4">
+        <SpotlightCard className="max-w-md w-full p-8 text-center bg-slate-900/90 border border-slate-800 rounded-3xl space-y-6 shadow-2xl backdrop-blur-xl">
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center mx-auto">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-extrabold text-slate-100">Sign In to Access Dashboard</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Please sign in or use quick bypass mode to view your contract workspace and AI analysis details.
+            </p>
+          </div>
+          <div className="space-y-3 pt-2">
+            <Link
+              href="/login?redirect=/dashboard"
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 transition-all duration-200 text-xs shadow-lg shadow-blue-600/25 hover:scale-105"
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In to Continue
+            </Link>
+            <button
+              onClick={() => signInAsDemo('Demo User', 'demo@legaljargon.com')}
+              className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center justify-center gap-2 transition-all duration-200 text-xs border border-slate-700 hover:scale-105"
+            >
+              <Zap className="w-4 h-4 text-cyan-400" />
+              Quick Bypass Login
+            </button>
+          </div>
+        </SpotlightCard>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header Banner */}
@@ -41,11 +79,11 @@ export default function DashboardPage() {
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 flex items-center gap-3">
             Document Dashboard
             <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 font-normal border border-blue-500/20">
-              Demo Workspace
+              Workspace
             </span>
           </h1>
           <p className="text-slate-400 text-xs sm:text-sm mt-1">
-            Welcome back, <strong className="text-slate-200">{currentUser.name}</strong>. Manage your uploaded contracts and view AI risk breakdowns.
+            Welcome back, <strong className="text-slate-200">{user.fullName}</strong>. Manage your uploaded contracts and view AI risk breakdowns.
           </p>
         </div>
 

@@ -55,19 +55,19 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
       onClick={onClick}
       className={cn(
         'group relative inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl font-semibold text-sm sm:text-base text-white transition-all duration-300 cursor-pointer overflow-hidden',
-        'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_35px_rgba(56,189,248,0.6)] border border-blue-400/30',
+        'bg-gradient-to-r from-violet-600 via-indigo-600 to-emerald-600 shadow-[0_0_25px_rgba(124,58,237,0.35)] hover:shadow-[0_0_35px_rgba(16,185,129,0.5)] border border-violet-400/30',
         className
       )}
       {...props}
     >
       {/* Animated Glowing Background Effect */}
-      <span className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-cyan-400/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm pointer-events-none" />
+      <span className="absolute inset-0 bg-gradient-to-r from-violet-400/20 via-emerald-400/20 to-amber-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm pointer-events-none" />
 
       {/* Button Content */}
       <span className="relative z-10 flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-cyan-200 group-hover:rotate-12 transition-transform duration-300" />
+        <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform duration-300" />
         {children}
-        <ArrowRight className="w-4 h-4 text-cyan-200 group-hover:translate-x-1 transition-transform duration-300" />
+        <ArrowRight className="w-4 h-4 text-emerald-200 group-hover:translate-x-1 transition-transform duration-300" />
       </span>
     </motion.button>
   );

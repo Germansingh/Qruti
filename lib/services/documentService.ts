@@ -6,37 +6,43 @@ import {
 import { SEED_DOCUMENTS, DEMO_USER } from "./mockData";
 import { aiService } from "./aiService";
 
-const STORAGE_KEY = "legal_jargon_documents_v1";
+const STORAGE_KEY = "legal_jargon_documents_v3";
 
 export const documentService = {
   /**
-   * Fetch all documents for demo user
+   * Fetch all documents for user
    */
   async getDocuments(): Promise<LegalDocument[]> {
     if (typeof window === "undefined") {
-      return SEED_DOCUMENTS;
+      return [];
     }
 
     try {
+      // Clear legacy storage v1 / v2 if present
+      localStorage.removeItem("legal_jargon_documents_v1");
+      localStorage.removeItem("legal_jargon_documents_v2");
+
       const stored = localStorage.getItem(STORAGE_KEY);
 
       if (!stored) {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(SEED_DOCUMENTS)
-        );
-
-        return SEED_DOCUMENTS;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+        return [];
       }
 
-      return JSON.parse(stored);
-    } catch (e) {
-      console.warn(
-        "LocalStorage error, returning default seed data:",
-        e
+      const parsed: LegalDocument[] = JSON.parse(stored);
+      // Filter out any legacy seed document IDs
+      const userOnlyDocs = parsed.filter(
+        (d) => !['doc-lease-2026', 'doc-emp-2026', 'doc-nda-2026'].includes(d.id)
       );
 
-      return SEED_DOCUMENTS;
+      if (userOnlyDocs.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userOnlyDocs));
+      }
+
+      return userOnlyDocs;
+    } catch (e) {
+      console.warn("LocalStorage error, returning empty list:", e);
+      return [];
     }
   },
 

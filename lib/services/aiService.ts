@@ -63,55 +63,29 @@ export const aiService = {
       riskScore = 'Moderate';
     }
 
-    // Build the 22-point detailed executive summary prompt
+    // Build practical simple-language summary prompt
     const langName = language === 'pa' ? 'Punjabi' : language === 'hi' ? 'Hindi' : 'English';
     const summaryPrompt = `
-You are Legal Jargon, an expert legal document analyst.
+You are Legal Jargon, a practical document advisor.
 
-EXECUTIVE SUMMARY REQUIREMENTS:
-Create a detailed Executive Summary of the entire document based ONLY on the supplied document text.
-
-RESPONSE LANGUAGE: ${langName}
+TASK:
+Provide a clear, simple, practical breakdown of this document in ${langName}.
 
 CRITICAL INSTRUCTIONS:
-- Do NOT give a short 2-4 sentence summary.
-- Read the complete extracted document and include all meaningful information that a normal person would need to understand the document.
-- Explain everything in very simple, clear language.
-- The goal is that a person who has NOT read the original document can understand the important contents by reading this Executive Summary.
-- Include small but meaningful details. Do not skip information simply because it appears minor.
-- Do not invent information. If something is not present in the document, state clearly that it is not specified.
-- Use only information supported by the extracted document.
-- Explain legal/technical terminology in simple language.
-- Preserve names, dates, amounts, addresses, and other factual details accurately.
-- Organize the summary with section headings (using markdown '###') and bullet points (using '•') where useful.
-- The length should depend on the document. A long document should receive a long, detailed summary.
-
-COVER THE FOLLOWING 22 POINTS WHENEVER PRESENT IN THE DOCUMENT:
-1. What the document is about
-2. Who the parties/persons are
-3. Names and identities mentioned
-4. Purpose of the document
-5. Important dates (Issue date, Effective date, Expiry date, Deadlines)
-6. Amounts and payment information
-7. Addresses
-8. Responsibilities and obligations
-9. Rights of each party
-10. Conditions and requirements
-11. Important clauses
-12. Termination/cancellation conditions
-13. Penalties, fees, or consequences
-14. Benefits or entitlements
-15. Risks or potentially important clauses
-16. Any exceptions
-17. Any unusual or noteworthy information
-18. Any other important factual information contained in the document
+- Explain what the document means in very simple, plain everyday language.
+- DO NOT mention technical stats like character counts, word counts, or document lengths.
+- Clearly answer:
+  1. What this document says / what it means.
+  2. What exact action is required from the user.
+  3. Which department, institution, or party issued/sent it.
+  4. The dates (When written/sent, effective date, and due deadline date).
+  5. The key requirements, rules, and conditions.
+- Format using simple markdown headings (###) and bullet points (•).
 
 DOCUMENT TEXT:
 --------------------
 ${text.substring(0, 30000)}
 --------------------
-
-Now generate the comprehensive Executive Summary:
 `;
 
     let execSummaryEn = '';
@@ -138,7 +112,7 @@ Now generate the comprehensive Executive Summary:
 
     // Fallback structured multi-section summary if AI keys are not available
     if (!execSummaryEn) {
-      execSummaryEn = generateDetailedFallbackSummary(text, contractType, jurisdiction);
+      execSummaryEn = generateDetailedFallbackSummary(text, contractType, jurisdiction, language);
     }
 
     // Extract key takeaways
@@ -150,7 +124,7 @@ Now generate the comprehensive Executive Summary:
 
     if (language === 'pa') {
       return {
-        executiveSummary: translateText(execSummaryEn, 'pa'),
+        executiveSummary: execSummaryEn.includes('ਮਤਲਬ') ? execSummaryEn : translateText(execSummaryEn, 'pa'),
         keyTakeaways: takeawaysEn.map((t) => translateText(t, 'pa')),
         contractType: translateText(contractType, 'pa'),
         governingJurisdiction: translateText(jurisdiction, 'pa'),
@@ -160,7 +134,7 @@ Now generate the comprehensive Executive Summary:
 
     if (language === 'hi') {
       return {
-        executiveSummary: translateText(execSummaryEn, 'hi'),
+        executiveSummary: execSummaryEn.includes('अर्थ') ? execSummaryEn : translateText(execSummaryEn, 'hi'),
         keyTakeaways: takeawaysEn.map((t) => translateText(t, 'hi')),
         contractType: translateText(contractType, 'hi'),
         governingJurisdiction: translateText(jurisdiction, 'hi'),
@@ -498,82 +472,123 @@ Now generate the comprehensive Executive Summary:
 };
 
 /**
- * Structured, multi-section detailed fallback summary generator
- * covering all 22 aspects required for Executive Summaries.
+ * Practical, simple language fallback summary generator
+ * structured cleanly without character counts or technical fluff.
  */
 function generateDetailedFallbackSummary(
   text: string,
   contractType: string,
-  jurisdiction: string
+  jurisdiction: string,
+  language: SupportedLanguage = 'en'
 ): string {
   const paragraphs = text.split(/\n+/).map((p) => p.trim()).filter((p) => p.length > 0);
-  const totalLength = text.length;
 
   // Extract parties
-  const partiesMatch = text.match(/(between|among|entered into by|parties:?)\s+([^,.\n]+(?:\s+and\s+[^,.\n]+)?)/i);
-  const parties = partiesMatch ? partiesMatch[0].trim() : 'Parties as identified in document text';
+  const partiesMatch = text.match(/(between|among|entered into by|parties:?|issued by)\s+([^,.\n]+(?:\s+and\s+[^,.\n]+)?)/i);
+  const parties = partiesMatch ? partiesMatch[0].trim() : 'Document Sender / Identified Parties';
 
   // Extract dates
   const dates = Array.from(new Set(text.match(/\b(202\d|201\d|203\d|\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4})\b/g) || []));
 
-  // Extract financial amounts
-  const amounts = Array.from(new Set(text.match(/(\$|₹|USD|INR|EUR|GBP)\s*[\d,]+(\.\d{2})?/gi) || []));
-
-  // Extract key terms/obligations
+  // Extract obligations / requirements
   const obligationSentences = paragraphs.filter((p) =>
-    /shall|must|agrees to|responsible for|obligation|duty|deliver/i.test(p)
+    /shall|must|agrees to|responsible for|obligation|duty|deliver|require/i.test(p)
   );
 
-  // Extract termination/penalty references
-  const terminationSentences = paragraphs.filter((p) =>
-    /terminate|cancel|penalty|fee|breach|notice/i.test(p)
-  );
+  if (language === 'pa') {
+    let paSummary = `### 1. ਇਹ ਦਸਤਾਵੇਜ਼ ਕੀ ਕਹਿ ਰਿਹਾ ਹੈ (ਸਰਲ ਮਤਲਬ)\n`;
+    paSummary += `ਇਹ ਦਸਤਾਵੇਜ਼ ਇੱਕ **${translateText(contractType, 'pa')}** ਹੈ। ਇਸ ਵਿੱਚ ਇਹ ਸਾਫ਼ ਲਿਖਿਆ ਹੋਇਆ ਹੈ ਕਿ ਦਸਤਾਵੇਜ਼ ਦੀਆਂ ਸ਼ਰਤਾਂ ਨੂੰ ਮੰਨਣਾ ਜ਼ਰੂਰੀ ਹੈ।\n\n`;
 
-  let summary = `### 1. Document Overview & Purpose\n`;
-  summary += `This document is categorized as a **${contractType}** spanning approximately ${totalLength} characters.\n\n`;
+    paSummary += `### 2. ਤੁਹਾਡੇ ਵਲੋਂ ਕੀ ਕਰਨ ਦੀ ਲੋੜ ਹੈ (Action Required)\n`;
+    if (obligationSentences.length > 0) {
+      paSummary += `• ${obligationSentences[0]}\n`;
+      if (obligationSentences[1]) paSummary += `• ${obligationSentences[1]}\n`;
+    } else {
+      paSummary += `• ਦਸਤਾਵੇਜ਼ ਵਿੱਚ ਦਿੱਤੀਆਂ ਸ਼ਰਤਾਂ ਧਿਆਨ ਨਾਲ ਪੜ੍ਹ ਕੇ ਲੋੜੀਂਦੀ ਕਾਰਵਾਈ ਕਰੋ।\n`;
+    }
+    paSummary += `\n`;
 
-  summary += `### 2. Parties & Governing Jurisdiction\n`;
-  summary += `• **Identified Parties:** ${parties}\n`;
-  summary += `• **Governing Jurisdiction / Law:** ${jurisdiction}\n\n`;
+    paSummary += `### 3. ਜਾਰੀ ਕਰਨ ਵਾਲਾ ਵਿਭਾਗ / ਭੇਜਣ ਵਾਲੀ ਪਾਰਟੀ\n`;
+    paSummary += `• **ਵਿਭਾਗ / ਪਾਰਟੀ:** ${parties}\n`;
+    paSummary += `• **ਜੂਰਿਸਡਿਕਸ਼ਨ / ਕਾਨੂੰਨੀ ਖੇਤਰ:** ${translateText(jurisdiction, 'pa')}\n\n`;
 
-  summary += `### 3. Important Dates & Timeline\n`;
-  if (dates.length > 0) {
-    summary += `• **Extracted Milestone Dates:** ${dates.join(', ')}\n\n`;
-  } else {
-    summary += `• **Dates:** Not explicitly specified in the extracted text.\n\n`;
+    paSummary += `### 4. ਲਿਖਣ / ਭੇਜਣ ਦੀ ਮਿਤੀ ਅਤੇ ਆਖਰੀ ਤਾਰੀਖ (Dates)\n`;
+    if (dates.length > 0) {
+      paSummary += `• **ਮਿਤੀਆਂ (Dates Mentioned):** ${dates.join(', ')}\n\n`;
+    } else {
+      paSummary += `• **ਮਿਤੀ:** ਦਸਤਾਵੇਜ਼ ਵਿੱਚ ਕੋਈ ਖਾਸ ਆਖਰੀ ਤਾਰੀਖ ਨਹੀਂ ਦਿੱਤੀ ਗਈ।\n\n`;
+    }
+
+    paSummary += `### 5. ਮੁੱਖ ਸ਼ਰਤਾਂ ਅਤੇ ਜ਼ਰੂਰਤਾਂ (Key Requirements)\n`;
+    const extra = paragraphs.slice(0, 4);
+    extra.forEach((p, idx) => {
+      paSummary += `• ${p}\n`;
+    });
+
+    return paSummary;
   }
 
-  summary += `### 4. Financial Information & Payments\n`;
-  if (amounts.length > 0) {
-    summary += `• **Mentioned Figures / Amounts:** ${amounts.join(', ')}\n\n`;
-  } else {
-    summary += `• **Payment Information:** No specific monetary amounts quantified in document text.\n\n`;
+  if (language === 'hi') {
+    let hiSummary = `### 1. यह दस्तावेज़ क्या कह रहा है (सरल अर्थ)\n`;
+    hiSummary += `यह दस्तावेज़ एक **${translateText(contractType, 'hi')}** है। इसमें स्पष्ट रूप से लिखा है कि दस्तावेज़ की शर्तों का पालन करना आवश्यक है।\n\n`;
+
+    hiSummary += `### 2. आपसे क्या करने की आवश्यकता है (Action Required)\n`;
+    if (obligationSentences.length > 0) {
+      hiSummary += `• ${obligationSentences[0]}\n`;
+      if (obligationSentences[1]) hiSummary += `• ${obligationSentences[1]}\n`;
+    } else {
+      hiSummary += `• दस्तावेज़ में दी गई शर्तों को ध्यान से पढ़कर आवश्यक कार्रवाई करें।\n`;
+    }
+    hiSummary += `\n`;
+
+    hiSummary += `### 3. जारीकर्ता विभाग / भेजने वाली संस्था\n`;
+    hiSummary += `• **विभाग / संस्था:** ${parties}\n`;
+    hiSummary += `• **कानूनी क्षेत्र (Jurisdiction):** ${translateText(jurisdiction, 'hi')}\n\n`;
+
+    hiSummary += `### 4. जारी तिथि एवं अंतिम समय सीमा (Dates)\n`;
+    if (dates.length > 0) {
+      hiSummary += `• **उल्लेखित तिथियां:** ${dates.join(', ')}\n\n`;
+    } else {
+      hiSummary += `• **तिथि:** दस्तावेज़ में कोई विशेष अंतिम तिथि निर्दिष्ट नहीं है।\n\n`;
+    }
+
+    hiSummary += `### 5. मुख्य नियम एवं आवश्यकताएं (Key Requirements)\n`;
+    const extra = paragraphs.slice(0, 4);
+    extra.forEach((p) => {
+      hiSummary += `• ${p}\n`;
+    });
+
+    return hiSummary;
   }
 
-  summary += `### 5. Responsibilities & Key Obligations\n`;
+  // English fallback summary
+  let summary = `### 1. What This Document Says (Simple Meaning)\n`;
+  summary += `This document is a **${contractType}**. It establishes terms and obligations between the parties involved.\n\n`;
+
+  summary += `### 2. Action Required From You\n`;
   if (obligationSentences.length > 0) {
-    obligationSentences.slice(0, 4).forEach((s) => {
-      summary += `• ${s}\n`;
-    });
-    summary += `\n`;
+    summary += `• ${obligationSentences[0]}\n`;
+    if (obligationSentences[1]) summary += `• ${obligationSentences[1]}\n`;
   } else {
-    summary += `• Standard contractual obligations apply based on the document type.\n\n`;
+    summary += `• Review the terms carefully and fulfill any required duties as outlined.\n`;
+  }
+  summary += `\n`;
+
+  summary += `### 3. Issuing Department / Sender\n`;
+  summary += `• **Sender / Issuer:** ${parties}\n`;
+  summary += `• **Jurisdiction / Law:** ${jurisdiction}\n\n`;
+
+  summary += `### 4. Issue & Deadline Dates\n`;
+  if (dates.length > 0) {
+    summary += `• **Mentioned Dates:** ${dates.join(', ')}\n\n`;
+  } else {
+    summary += `• **Dates:** No specific deadline date mentioned in text.\n\n`;
   }
 
-  summary += `### 6. Termination, Penalties & Risk Provisions\n`;
-  if (terminationSentences.length > 0) {
-    terminationSentences.slice(0, 4).forEach((s) => {
-      summary += `• ${s}\n`;
-    });
-    summary += `\n`;
-  } else {
-    summary += `• No special termination penalties explicitly flagged in extracted text.\n\n`;
-  }
-
-  summary += `### 7. Additional Relevant Factual Details\n`;
-  const extraSentences = paragraphs.slice(0, 6);
-  extraSentences.forEach((p, idx) => {
-    summary += `${idx + 1}. ${p}\n`;
+  summary += `### 5. Key Rules & Requirements\n`;
+  const extra = paragraphs.slice(0, 4);
+  extra.forEach((p) => {
+    summary += `• ${p}\n`;
   });
 
   return summary;
